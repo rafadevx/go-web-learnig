@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"myapp/pkg/config"
+	"myapp/pkg/models"
 	"net/http"
 	"path/filepath"
 )
@@ -15,7 +16,11 @@ func NewTemplates(a *config.AppConfig) {
 	app = a
 }
 
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
+func AddDefaultData(templateData *models.TemplateData) *models.TemplateData {
+	return templateData
+}
+
+func RenderTemplate(w http.ResponseWriter, tmpl string, templateData *models.TemplateData) {
 	templateCache := app.TemplateCache
 
 	template, ok := templateCache[tmpl]
@@ -24,7 +29,8 @@ func RenderTemplate(w http.ResponseWriter, tmpl string) {
 	}
 
 	buf := new(bytes.Buffer)
-	err := template.Execute(buf, nil)
+	templateData = AddDefaultData(templateData)
+	err := template.Execute(buf, templateData)
 	if err != nil {
 		log.Println(err)
 	}
