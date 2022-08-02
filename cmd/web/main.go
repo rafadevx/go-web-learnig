@@ -7,12 +7,27 @@ import (
 	"myapp/pkg/handlers"
 	"myapp/pkg/render"
 	"net/http"
+	"time"
+
+	"github.com/alexedwards/scs/v2"
 )
 
 const portNumber = ":3000"
 
+var app config.AppConfig
+var session *scs.SessionManager
+
 func main() {
-	var app config.AppConfig
+
+	app.InProduction = false
+
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.InProduction
+
+	app.Session = session
 
 	templateCache, err := render.CreateTemplateCache()
 	if err != nil {
@@ -24,11 +39,7 @@ func main() {
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 
-	// http.HandleFunc("/", handlers.Repo.Home)
-	// http.HandleFunc("/about", handlers.Repo.About)
-
 	fmt.Printf("Starting server at %s", portNumber)
-	// _ = http.ListenAndServe(portNumber, nil)
 	srv := &http.Server{
 		Addr:    portNumber,
 		Handler: routes(&app),
